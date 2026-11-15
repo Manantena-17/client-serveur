@@ -1,27 +1,24 @@
 <?php
 
-namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use Database\Factories\ArticleFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-#[Fillable(['title', 'content', 'published_at'])]
-class Article extends Model
+return new class extends Migration
 {
-    /** @use HasFactory<ArticleFactory> */
-    use HasFactory;
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public function up(): void
     {
-        return [
-            'published_at' => 'datetime',
-        ];
+        Schema::create('articles', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('content');
+            $table->timestamp('published_at')->nullable(); // null = brouillon
+            $table->timestamps();
+        });
     }
-}
+
+    public function down(): void
+    {
+        Schema::dropIfExists('articles');
+    }
+};
