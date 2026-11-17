@@ -11,3 +11,6 @@ Route::put('/articles/{article}', [ArticleController::class, 'update']);
 Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
 
 Route::apiResource('books', BookController::class);
+
+
+Route::apiResource('members', MemberController::class);
