@@ -2,21 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;   // 1. import
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[Fillable([
+    'title',
+    'author',
+    'isbn',
+    'publication_year',
+    'total_copies',
+    'available_copies',
+    'category_id',
+])]
 class Book extends Model
 {
-    protected $fillable = [
-        'title',
-        'author',
-        'isbn',
-        'publication_year',
-        'total_copies',
-        'available_copies',
-        'category_id',
-    ];
+    use HasFactory;                                        // 2. le trait
 
     public function category(): BelongsTo
     {
