@@ -1,16 +1,12 @@
 <?php
 
-use App\Http\Controllers\Api\ArticleController;
-use App\Http\Controllers\Api\BookController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\LoanController;
+use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\BookController;
 
-Route::get('/articles', [ArticleController::class, 'index']);
-Route::get('/articles/{article}', [ArticleController::class, 'show']);
-Route::post('/articles', [ArticleController::class, 'store']);
-Route::put('/articles/{article}', [ArticleController::class, 'update']);
-Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
+Route::apiResource('loans',   LoanController::class)->only(['index', 'store', 'show']);
+Route::apiResource('members', MemberController::class)->only(['index', 'store', 'show', 'destroy']);
+Route::apiResource('books',   BookController::class)->only(['index', 'store', 'show', 'destroy']);
 
-Route::apiResource('books', BookController::class);
-
-
-Route::apiResource('members', MemberController::class);
+Route::patch('/loans/{loan}/return', [LoanController::class, 'returnBook']);

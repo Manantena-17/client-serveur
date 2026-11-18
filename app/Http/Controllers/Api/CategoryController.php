@@ -3,48 +3,56 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
-        //
+        return CategoryResource::collection(
+            Category::query()->withCount('books')->orderBy('name')->paginate(15),
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request): JsonResponse
     {
-        //
+        $category = Category::query()->create($request->validated());
+
+        return (new CategoryResource($category))
+            ->response()
+            ->setStatusCode(HttpResponse::HTTP_CREATED);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
+    public function show(Category $category): CategoryResource
     {
-        //
+        return new CategoryResource($category->loadCount('books'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Category $category)
+    public function update(UpdateCategoryRequest $request, Category $category): CategoryResource
     {
-        //
+        $category->update($request->validated());
+
+        return new CategoryResource($category->refresh()->loadCount('books'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Category $category)
+    public function destroy(Category $category): Response|JsonResponse
     {
-        //
+        // A category that still contains books cannot be deleted
+        if ($category->books()->exists()) {
+            return response()->json([
+                'message' => 'Cannot delete this category: it still contains books.',
+            ], HttpResponse::HTTP_CONFLICT);
+        }
+
+        $category->delete();
+
+        return response()->noContent();
     }
 }

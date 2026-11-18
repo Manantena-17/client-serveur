@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Loan extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'member_id',
         'book_id',
@@ -15,13 +18,16 @@ class Loan extends Model
         'returned_at',
     ];
 
-    protected $casts = [
-        'borrowed_at' => 'date',
-        'due_at'      => 'date',
-        'returned_at' => 'date',
-    ];
-
     protected $appends = ['is_overdue', 'days_late'];
+
+    protected function casts(): array
+    {
+        return [
+            'borrowed_at' => 'date',
+            'due_at'      => 'date',
+            'returned_at' => 'date',
+        ];
+    }
 
     public function member(): BelongsTo
     {
@@ -33,8 +39,6 @@ class Loan extends Model
         return $this->belongsTo(Book::class);
     }
 
-    // Overdue: not returned yet and due date passed,
-    // or returned after the due date
     public function getIsOverdueAttribute(): bool
     {
         return $this->days_late > 0;
@@ -42,10 +46,18 @@ class Loan extends Model
 
     public function getDaysLateAttribute(): int
     {
-        $end = $this->returned_at ?? now();
+        if (! $this->due_at) {
+            return 0;
+        }
 
-        return $end->startOfDay()->gt($this->due_at->startOfDay())
-            ? $this->due_at->startOfDay()->diffInDays($end->startOfDay())
-            : 0;
+        $end = ($this->returned_at ?? now())->copy()->startOfDay();
+        $due = $this->due_at->copy()->startOfDay();
+
+        if ($end->lte($due)) {
+            return 0;
+        }
+
+        // Carbon 3 renvoie un float → cast explicite en int
+        return (int) $due->diffInDays($end, true);
     }
 }

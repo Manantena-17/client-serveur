@@ -2,24 +2,24 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Book;
+use App\Models\Category;
+use App\Models\Member;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $categories = Category::factory()->count(5)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Reuse the 5 categories instead of creating one per book
+        Book::factory()->count(30)->make()->each(function ($book) use ($categories) {
+            $book->category_id = $categories->random()->id;
+            $book->save();
+        });
+
+        Member::factory()->student()->count(15)->create();
+        Member::factory()->teacher()->count(5)->create();
     }
 }
