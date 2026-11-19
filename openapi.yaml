@@ -1,0 +1,605 @@
+openapi: 3.0.3
+info:
+  title: Library API
+  description: REST API for managing books, members, categories and loans.
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:8000/api
+    description: Local
+
+tags:
+  - name: Categories
+  - name: Books
+  - name: Members
+  - name: Loans
+
+paths:
+  # ---------------------------------------------------------------- Categories
+  /categories:
+    get:
+      tags: [Categories]
+      summary: List categories (paginated)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+    post:
+      tags: [Categories]
+      summary: Create a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Category'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /categories/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Categories]
+      summary: Get a category
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Categories]
+      summary: Update a category (send only the fields to change)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Categories]
+      summary: Delete a category (refused if it still contains books)
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # --------------------------------------------------------------------- Books
+  /books:
+    get:
+      tags: [Books]
+      summary: List books (paginated, filterable)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: search
+          in: query
+          description: Search in title, author and ISBN
+          schema:
+            type: string
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+        - name: available
+          in: query
+          description: Set to 1 to return only books with at least one available copy
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Book'
+    post:
+      tags: [Books]
+      summary: Create a book (available_copies is set to total_copies)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /books/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Books]
+      summary: Get a book
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Books]
+      summary: Update a book (send only the fields to change)
+      description: total_copies cannot be lower than the number of copies currently borrowed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Books]
+      summary: Delete a book (refused if it has loans)
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ------------------------------------------------------------------- Members
+  /members:
+    get:
+      tags: [Members]
+      summary: List members (paginated, filterable)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/MemberType'
+        - name: search
+          in: query
+          description: Search in name and email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Member'
+    post:
+      tags: [Members]
+      summary: Create a member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /members/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Members]
+      summary: Get a member
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Members]
+      summary: Update a member (send only the fields to change)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Members]
+      summary: Delete a member (refused if they have loans)
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # --------------------------------------------------------------------- Loans
+  /loans:
+    get:
+      tags: [Loans]
+      summary: List loans (paginated, filterable)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, returned, overdue]
+        - name: member_id
+          in: query
+          schema:
+            type: integer
+        - name: book_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Loan'
+    post:
+      tags: [Loans]
+      summary: Borrow a book
+      description: |
+        Business rules (422 if broken):
+        - at least one copy must be available
+        - a student can have 3 active loans max, a teacher 6
+        - a member cannot borrow the same book twice at once
+
+        If due_at is omitted, it defaults to 14 days from today.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Loan'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /loans/{id}:
+    get:
+      tags: [Loans]
+      summary: Get a loan
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Loan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /loans/{id}/return:
+    patch:
+      tags: [Loans]
+      summary: Return a book (gives the copy back to the stock)
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Loan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    Page:
+      name: page
+      in: query
+      description: Page number (15 items per page)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Action refused by a business rule (e.g. active loans exist)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Validation or business rule error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Cannot delete this book - it has active loans.
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: No copy of this book is currently available.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            book_id:
+              - No copy of this book is currently available.
+
+    Pagination:
+      type: object
+      properties:
+        links:
+          type: object
+          properties:
+            first: { type: string, nullable: true }
+            last: { type: string, nullable: true }
+            prev: { type: string, nullable: true }
+            next: { type: string, nullable: true }
+        meta:
+          type: object
+          properties:
+            current_page: { type: integer, example: 1 }
+            last_page: { type: integer, example: 3 }
+            per_page: { type: integer, example: 15 }
+            total: { type: integer, example: 40 }
+
+    MemberType:
+      type: string
+      enum: [student, teacher]
+
+    # ---- Category
+    Category:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: Informatique }
+        description: { type: string, nullable: true, example: Programming books }
+        books_count:
+          type: integer
+          description: Only present on category endpoints
+          example: 12
+    CategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 255, example: Informatique }
+        description: { type: string, nullable: true }
+
+    # ---- Book
+    Book:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: Laravel Facile }
+        author: { type: string, example: Rakoto }
+        isbn: { type: string, example: '9781234567890' }
+        publication_year: { type: integer, example: 2024 }
+        total_copies: { type: integer, example: 5 }
+        available_copies: { type: integer, example: 3 }
+        is_available: { type: boolean, example: true }
+        category:
+          $ref: '#/components/schemas/Category'
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    BookInput:
+      type: object
+      required: [title, author, isbn, publication_year, total_copies, category_id]
+      properties:
+        title: { type: string, maxLength: 255, example: Laravel Facile }
+        author: { type: string, maxLength: 255, example: Rakoto }
+        isbn: { type: string, maxLength: 20, description: Must be unique, example: '9781234567890' }
+        publication_year: { type: integer, minimum: 1000, example: 2024 }
+        total_copies: { type: integer, minimum: 1, example: 5 }
+        category_id: { type: integer, example: 1 }
+
+    # ---- Member
+    Member:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: Sarah }
+        email: { type: string, format: email, example: sarah@univ.mg }
+        type:
+          $ref: '#/components/schemas/MemberType'
+    MemberInput:
+      type: object
+      required: [name, email, type]
+      properties:
+        name: { type: string, maxLength: 255, example: Sarah }
+        email: { type: string, format: email, description: Must be unique, example: sarah@univ.mg }
+        type:
+          $ref: '#/components/schemas/MemberType'
+
+    # ---- Loan
+    Loan:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        member:
+          $ref: '#/components/schemas/Member'
+        book:
+          $ref: '#/components/schemas/Book'
+        borrowed_at: { type: string, format: date, example: '2026-11-14' }
+        due_at: { type: string, format: date, example: '2026-11-28' }
+        returned_at: { type: string, format: date, nullable: true, example: null }
+        status:
+          type: string
+          enum: [borrowed, returned]
+        is_overdue: { type: boolean, example: false }
+        days_late: { type: integer, example: 0 }
+        created_at: { type: string, format: date-time }
+    LoanInput:
+      type: object
+      required: [member_id, book_id]
+      properties:
+        member_id: { type: integer, example: 1 }
+        book_id: { type: integer, example: 1 }
+        due_at:
+          type: string
+          format: date
+          description: Optional, must be after today (default is today + 14 days)
+          example: '2026-12-01'
