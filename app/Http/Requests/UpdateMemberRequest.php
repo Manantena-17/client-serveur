@@ -15,12 +15,27 @@ class UpdateMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'  => ['sometimes', 'required', 'string', 'max:255'],
+            'name' => [
+                'required_without_all:email,password,type,subscription_status',
+                'string', 'max:255',
+            ],
             'email' => [
-                'sometimes', 'required', 'email', 'max:255',
+                'required_without_all:name,password,type,subscription_status',
+                'email', 'max:255',
                 Rule::unique('members', 'email')->ignore($this->route('member')),
             ],
-            'type'  => ['sometimes', 'required', 'in:student,teacher'],
+            'password' => [
+                'required_without_all:name,email,type,subscription_status',
+                'string', 'min:8', 'max:255',
+            ],
+            'type' => [
+                'required_without_all:name,email,password,subscription_status',
+                'in:student,teacher',
+            ],
+            'subscription_status' => [
+                'required_without_all:name,email,password,type',
+                'in:free,premium',
+            ],
         ];
     }
 }

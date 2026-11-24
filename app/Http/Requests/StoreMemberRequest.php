@@ -14,9 +14,11 @@ class StoreMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:members,email'],
-            'type'  => ['required', 'in:student,teacher'],
+            'name'                => ['required', 'string', 'max:255'],
+            'email'               => ['required', 'email', 'max:255', 'unique:members,email'],
+            'password'            => ['nullable', 'string', 'min:8', 'max:255'],
+            'type'                => ['required', 'in:student,teacher'],
+            'subscription_status' => ['sometimes', 'in:free,premium'],
         ];
     }
 }
