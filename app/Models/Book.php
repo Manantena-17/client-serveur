@@ -3,27 +3,42 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;   // 1. import
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'title',
-    'author',
+    'author_id',
     'isbn',
     'publication_year',
+    'summary',
+    'summary_generated_by',
+    'summary_generated_at',
     'total_copies',
     'available_copies',
     'category_id',
 ])]
 class Book extends Model
 {
-    use HasFactory;                                        // 2. le trait
+    use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'summary_generated_at' => 'datetime',
+        ];
+    }
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(Author::class);
     }
 
     public function loans(): HasMany

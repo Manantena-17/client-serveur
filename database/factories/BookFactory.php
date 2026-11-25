@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Author;
 use App\Models\Book;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,7 +18,7 @@ class BookFactory extends Factory
 
         return [
             'title'            => fake()->sentence(3),
-            'author'           => fake()->name(),
+            'author_id' => Author::factory(),
             'isbn'             => fake()->unique()->isbn13(),
             'publication_year' => fake()->numberBetween(1980, 2025),
             'total_copies'     => $total,
