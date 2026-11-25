@@ -29,10 +29,12 @@ class LoanService
                 ]);
             }
 
-            // Rule 2: loan limit (3 students / 6 teachers)
+
+            // Rule: free = 2 active loans, premium = unlimited
             if (! $member->canBorrow()) {
                 throw ValidationException::withMessages([
-                    'member_id' => "This {$member->type} has reached the limit of {$member->maxLoans()} active loans.",
+                    'member_id' => "Limite de {$member->maxLoans()} emprunts actifs atteinte (abonnement gratuit). "
+                        . 'Passez premium pour emprunter sans limite.',
                 ]);
             }
 
@@ -50,7 +52,7 @@ class LoanService
                 'due_at'         => $dueAt ?? now()->addDays(self::DEFAULT_LOAN_DAYS)->toDateString(),
                 // default: premium members borrow for free, others must pay
                 'payment_status' => $paymentStatus
-                    ?? ($member->subscription_status === 'premium' ? 'free' : 'pending'),
+                    ?? ($member->isPremium() ? 'free' : 'pending'),
             ]);
 
             $book->decrement('available_copies');
