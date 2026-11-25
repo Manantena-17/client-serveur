@@ -21,7 +21,10 @@ return [
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
-
+    'openai' => [
+        'key'   => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL'),
+    ],
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

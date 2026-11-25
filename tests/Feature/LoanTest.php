@@ -17,11 +17,11 @@ class LoanTest extends TestCase
     public function test_member_can_borrow_an_available_book(): void
     {
         $member = Member::factory()->student()->create();
-        $book   = Book::factory()->create(['total_copies' => 2, 'available_copies' => 2]);
+        $book = Book::factory()->create(['total_copies' => 2, 'available_copies' => 2]);
 
         $this->postJson('/api/loans', [
             'member_id' => $member->id,
-            'book_id'   => $book->id,
+            'book_id' => $book->id,
         ])
             ->assertCreated()
             ->assertJsonPath('data.status', 'borrowed');
@@ -32,11 +32,11 @@ class LoanTest extends TestCase
     public function test_cannot_borrow_a_book_with_no_copy_available(): void
     {
         $member = Member::factory()->student()->create();
-        $book   = Book::factory()->unavailable()->create();
+        $book = Book::factory()->unavailable()->create();
 
         $this->postJson('/api/loans', [
             'member_id' => $member->id,
-            'book_id'   => $book->id,
+            'book_id' => $book->id,
         ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['book_id']);
@@ -56,7 +56,7 @@ class LoanTest extends TestCase
 
         $this->postJson('/api/loans', [
             'member_id' => $member->id,
-            'book_id'   => $fourth->id,
+            'book_id' => $fourth->id,
         ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['member_id']);
@@ -68,7 +68,7 @@ class LoanTest extends TestCase
 
         Loan::factory()->count(5)->create(['member_id' => $member->id]);
 
-        $sixth   = Book::factory()->create(['total_copies' => 1, 'available_copies' => 1]);
+        $sixth = Book::factory()->create(['total_copies' => 1, 'available_copies' => 1]);
         $seventh = Book::factory()->create(['total_copies' => 1, 'available_copies' => 1]);
 
         $this->postJson('/api/loans', ['member_id' => $member->id, 'book_id' => $sixth->id])
@@ -82,7 +82,7 @@ class LoanTest extends TestCase
     public function test_member_cannot_borrow_the_same_book_twice(): void
     {
         $member = Member::factory()->teacher()->create();
-        $book   = Book::factory()->create(['total_copies' => 5, 'available_copies' => 5]);
+        $book = Book::factory()->create(['total_copies' => 5, 'available_copies' => 5]);
 
         $this->postJson('/api/loans', ['member_id' => $member->id, 'book_id' => $book->id])
             ->assertCreated();
@@ -98,7 +98,7 @@ class LoanTest extends TestCase
     {
         $loan = Loan::factory()->create([
             'borrowed_at' => now()->subDays(20)->toDateString(),
-            'due_at'      => now()->subDays(5)->toDateString(),
+            'due_at' => now()->subDays(5)->toDateString(),
         ]);
 
         $this->getJson("/api/loans/{$loan->id}")
@@ -111,7 +111,7 @@ class LoanTest extends TestCase
     {
         $loan = Loan::factory()->create([
             'borrowed_at' => now()->toDateString(),
-            'due_at'      => now()->addDays(10)->toDateString(),
+            'due_at' => now()->addDays(10)->toDateString(),
         ]);
 
         $this->getJson("/api/loans/{$loan->id}")
@@ -125,7 +125,7 @@ class LoanTest extends TestCase
         Loan::factory()->create(['due_at' => now()->subDays(3)->toDateString()]);
         Loan::factory()->create(['due_at' => now()->addDays(3)->toDateString()]);
         Loan::factory()->create([
-            'due_at'      => now()->subDays(3)->toDateString(),
+            'due_at' => now()->subDays(3)->toDateString(),
             'returned_at' => now()->toDateString(),
         ]);
 
@@ -139,11 +139,11 @@ class LoanTest extends TestCase
     public function test_returning_a_book_restores_the_copy(): void
     {
         $member = Member::factory()->student()->create();
-        $book   = Book::factory()->create(['total_copies' => 1, 'available_copies' => 1]);
+        $book = Book::factory()->create(['total_copies' => 1, 'available_copies' => 1]);
 
         $loanId = $this->postJson('/api/loans', [
             'member_id' => $member->id,
-            'book_id'   => $book->id,
+            'book_id' => $book->id,
         ])->json('data.id');
 
         $this->assertSame(0, $book->fresh()->available_copies);
@@ -160,7 +160,8 @@ class LoanTest extends TestCase
         $loan = Loan::factory()->returned()->create();
 
         $this->patchJson("/api/loans/{$loan->id}/return")
-            ->assertUnprocessable();
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['loan']);
     }
 
     public function test_after_return_member_can_borrow_again(): void

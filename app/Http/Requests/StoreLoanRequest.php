@@ -14,9 +14,10 @@ class StoreLoanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'member_id' => ['required', 'integer', 'exists:members,id'],
-            'book_id'   => ['required', 'integer', 'exists:books,id'],
-            'due_at'    => ['nullable', 'date', 'after:today'],
+            'member_id'      => ['required', 'integer', 'exists:members,id'],
+            'book_id'        => ['required', 'integer', 'exists:books,id'],
+            'due_at'         => ['nullable', 'date', 'after:today'],
+            'payment_status' => ['sometimes', 'in:pending,paid,free'],
         ];
     }
 }

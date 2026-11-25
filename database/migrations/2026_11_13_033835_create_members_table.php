@@ -12,7 +12,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+
             $table->enum('type', ['student', 'teacher'])->default('student');
+
             $table->timestamps();
         });
     }

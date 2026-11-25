@@ -13,9 +13,11 @@ class MemberFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'  => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'type'  => fake()->randomElement(['student', 'teacher']),
+            'name'                => fake()->name(),
+            'email'               => fake()->unique()->safeEmail(),
+            'password'            => 'password123',
+            'type'                => fake()->randomElement(['student', 'teacher']),
+            'subscription_status' => fake()->randomElement(['free', 'premium']),
         ];
     }
 
@@ -27,5 +29,9 @@ class MemberFactory extends Factory
     public function teacher(): static
     {
         return $this->state(fn () => ['type' => 'teacher']);
+    }
+    public function admin(): static
+    {
+        return $this->state(fn () => ['role' => 'admin']);
     }
 }

@@ -16,6 +16,7 @@ class Loan extends Model
         'borrowed_at',
         'due_at',
         'returned_at',
+        'payment_status',
     ];
 
     protected $appends = ['is_overdue', 'days_late'];
@@ -46,18 +47,9 @@ class Loan extends Model
 
     public function getDaysLateAttribute(): int
     {
-        if (! $this->due_at) {
-            return 0;
-        }
+        $end = ($this->returned_at ?? now())->startOfDay();
+        $due = $this->due_at->startOfDay();
 
-        $end = ($this->returned_at ?? now())->copy()->startOfDay();
-        $due = $this->due_at->copy()->startOfDay();
-
-        if ($end->lte($due)) {
-            return 0;
-        }
-
-        // Carbon 3 renvoie un float → cast explicite en int
-        return (int) $due->diffInDays($end, true);
+        return $end->gt($due) ? (int) $due->diffInDays($end) : 0;
     }
 }

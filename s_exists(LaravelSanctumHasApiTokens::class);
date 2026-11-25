@@ -1,0 +1,13 @@
+[90m= [39m[
+    [32m"[39m[32mid[39m[32m"[39m,
+    [32m"[39m[32mtitle[39m[32m"[39m,
+    [32m"[39m[32mauthor_id[39m[32m"[39m,
+    [32m"[39m[32misbn[39m[32m"[39m,
+    [32m"[39m[32mpublication_year[39m[32m"[39m,
+    [32m"[39m[32msummary[39m[32m"[39m,
+    [32m"[39m[32mtotal_copies[39m[32m"[39m,
+    [32m"[39m[32mavailable_copies[39m[32m"[39m,
+    [32m"[39m[32mcategory_id[39m[32m"[39m,
+    [32m"[39m[32mcreated_at[39m[32m"[39m,
+    [32m"[39m[32mupdated_at[39m[32m"[39m,
+  ]

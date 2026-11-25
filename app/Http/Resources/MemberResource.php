@@ -10,10 +10,12 @@ class MemberResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'    => $this->id,
-            'name'  => $this->name,
-            'email' => $this->email,
-            'type'  => $this->type,
+            'id'                  => $this->id,
+            'name'                => $this->name,
+            'email'               => $this->email,
+            'type'                => $this->type,
+            'subscription_status' => $this->subscription_status,
+            'created_at'          => $this->created_at?->toIso8601String(),
         ];
     }
 }
