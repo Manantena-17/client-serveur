@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Stripe\PaymentIntent;
 use Stripe\StripeClient;
+use Stripe\Exception\InvalidRequestException;
 
 class StripeService
 {
@@ -16,23 +17,51 @@ class StripeService
     {
         $stripe = $this->client();
 
-        if (! $member->stripe_customer_id) {
-            $customer = $stripe->customers->create([
-                'email'    => $member->email,
-                'name'     => $member->name,
-                'metadata' => ['member_id' => (string) $member->id],
+        $customerId = $member->stripe_customer_id ?: $this->createCustomer($stripe, $member);
+
+        try {
+            return $this->createIntent($stripe, $member, $customerId);
+        } catch (InvalidRequestException $e) {
+            // Customer supprimé ou inexistant côté Stripe : on le recrée et on réessaie une fois
+            if ($e->getStripeCode() !== 'resource_missing' || ! str_contains($e->getMessage(), 'customer')) {
+                throw $e;
+            }
+
+            Log::warning('Stripe customer missing, recreating', [
+                'member_id'   => $member->id,
+                'old_customer' => $customerId,
             ]);
 
-            $member->forceFill(['stripe_customer_id' => $customer->id])->save();
-        }
+            $member->forceFill(['stripe_customer_id' => null])->save();
 
+            $customerId = $this->createCustomer($stripe, $member);
+
+            return $this->createIntent($stripe, $member, $customerId);
+        }
+    }
+
+    private function createCustomer(StripeClient $stripe, Member $member): string
+    {
+        $customer = $stripe->customers->create([
+            'email'    => $member->email,
+            'name'     => $member->name,
+            'metadata' => ['member_id' => (string) $member->id],
+        ]);
+
+        $member->forceFill(['stripe_customer_id' => $customer->id])->save();
+
+        return $customer->id;
+    }
+
+    private function createIntent(StripeClient $stripe, Member $member, string $customerId): PaymentIntent
+    {
         return $stripe->paymentIntents->create([
-            'amount'               => config('services.stripe.premium_amount'),
-            'currency'             => config('services.stripe.currency'),
-            'customer'             => $member->stripe_customer_id,
-            'payment_method_types' => ['card'],
-            'description'          => 'Abonnement premium bibliothèque (1 mois)',
-            'metadata'             => [
+            'amount'   => (int) config('services.stripe.premium_amount'),
+            'currency' => strtolower((string) config('services.stripe.currency', 'eur')),
+            'customer' => $customerId,
+            'automatic_payment_methods' => ['enabled' => true],
+            'description' => 'Abonnement premium bibliothèque (1 mois)',
+            'metadata' => [
                 'member_id' => (string) $member->id,
                 'plan'      => 'premium',
             ],

@@ -32,13 +32,13 @@ class StripeWebhookController extends Controller
                 (string) $request->header('Stripe-Signature'),
                 $secret,
             );
-        } catch (UnexpectedValueException|SignatureVerificationException $e) {
+        } catch (\UnexpectedValueException|\Stripe\Exception\SignatureVerificationException $e) {
             Log::warning('Stripe webhook rejected: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'Signature invalide.',
-            ], HttpResponse::HTTP_BAD_REQUEST);
+            ], 401);
         }
 
         match ($event->type) {

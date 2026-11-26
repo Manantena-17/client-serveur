@@ -18,14 +18,15 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 //
-Route::post('webhooks/stripe', StripeWebhookController::class);
+
 // Inscription et connexion : 5 essais par minute au maximum (anti force brute)
 Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('login',    [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 // Endpoints IA accessibles sans connexion (préfixe /api/v1)
 Route::prefix('v1')->group(function () {
-
+    //  stripe
+    Route::post('webhooks/stripe', StripeWebhookController::class);
     // GET /api/v1/books/{id}/summary
     // Lit le résumé déjà enregistré. Aucun appel à l'IA, donc aucun coût.
     Route::get('books/{book}/summary', [BookSummaryController::class, 'show']);

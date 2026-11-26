@@ -51,7 +51,8 @@ class MemberController extends Controller
 
         // A member cannot become a student if they hold more loans than the student limit
         if (($data['type'] ?? null) === 'student'
-            && $member->activeLoans()->count() > Member::MAX_LOANS['student']) {
+            && $member->maxLoans() !== null
+            && $member->activeLoans()->count() > $member->maxLoans()) {
             return response()->json([
                 'message' => 'Cannot change to student: the member has more active loans than allowed.',
             ], HttpResponse::HTTP_UNPROCESSABLE_ENTITY);
