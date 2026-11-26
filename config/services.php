@@ -21,9 +21,9 @@ return [
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
-    'openai' => [
-        'key'   => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL'),
+    'openrouter' => [
+        'key'   => env('OPENROUTER_API_KEY', env('OPENAI_API_KEY')),
+        'model' => env('OPENROUTER_MODEL', env('OPENAI_MODEL')),
     ],
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
@@ -36,6 +36,12 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+    'stripe' => [
+        'secret'         => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'premium_amount' => (int) env('STRIPE_PREMIUM_AMOUNT', 500),
+        'currency'       => env('STRIPE_CURRENCY', 'eur'),
     ],
 
 ];

@@ -1,18 +1,26 @@
 openapi: 3.0.3
 info:
   title: Library API
-  description: REST API for managing books, members, categories and loans.
-  version: 1.0.0
+  description: REST API for managing books, members, categories, loans, AI features and premium subscriptions.
+  version: 1.1.0
 
 servers:
   - url: http://127.0.0.1:8000/api
     description: Local
+
+# By default every endpoint needs a Bearer token (auth:sanctum).
+# Public endpoints override this with `security: []`.
+security:
+  - BearerAuth: []
 
 tags:
   - name: Categories
   - name: Books
   - name: Members
   - name: Loans
+  - name: AI
+  - name: Subscriptions
+  - name: Webhooks
 
 paths:
   # ---------------------------------------------------------------- Categories
@@ -36,6 +44,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [Categories]
       summary: Create a category
@@ -55,6 +65,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
 
@@ -74,6 +86,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
@@ -95,6 +109,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
@@ -105,6 +121,8 @@ paths:
       responses:
         '204':
           description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -146,6 +164,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Book'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [Books]
       summary: Create a book (available_copies is set to total_copies)
@@ -165,6 +185,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Book'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
 
@@ -184,6 +206,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Book'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
@@ -206,6 +230,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Book'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
@@ -216,6 +242,8 @@ paths:
       responses:
         '204':
           description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -225,7 +253,7 @@ paths:
   /members:
     get:
       tags: [Members]
-      summary: List members (paginated, filterable)
+      summary: List members (paginated, filterable) - admin only
       parameters:
         - $ref: '#/components/parameters/Page'
         - name: type
@@ -251,9 +279,13 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [Members]
-      summary: Create a member
+      summary: Create a member - admin only
       requestBody:
         required: true
         content:
@@ -270,6 +302,10 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
 
@@ -278,7 +314,7 @@ paths:
       - $ref: '#/components/parameters/Id'
     get:
       tags: [Members]
-      summary: Get a member
+      summary: Get a member - admin only
       responses:
         '200':
           description: OK
@@ -289,11 +325,15 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
       tags: [Members]
-      summary: Update a member (send only the fields to change)
+      summary: Update a member (send only the fields to change) - admin only
       requestBody:
         required: true
         content:
@@ -310,16 +350,24 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
     delete:
       tags: [Members]
-      summary: Delete a member (refused if they have loans)
+      summary: Delete a member (refused if they have loans) - admin only
       responses:
         '204':
           description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -359,6 +407,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Loan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [Loans]
       summary: Borrow a book
@@ -385,15 +435,17 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Loan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
 
   /loans/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
     get:
       tags: [Loans]
       summary: Get a loan
-      parameters:
-        - $ref: '#/components/parameters/Id'
       responses:
         '200':
           description: OK
@@ -404,6 +456,8 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Loan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -423,12 +477,198 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Loan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
 
+  # ------------------------------------------------------------------------ AI
+  /v1/books/{id}/summary:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [AI]
+      summary: Read the saved summary of a book (no AI call, no cost)
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummaryResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [AI]
+      summary: Generate and save the summary of a book
+      description: |
+        Returns the existing summary without calling the AI,
+        unless `force=1` is sent. Limited to 5 requests per minute.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: force
+          in: query
+          description: Set to 1 to regenerate even if a summary exists
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        '200':
+          description: Summary returned or generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummaryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/books/smart-search:
+    post:
+      tags: [AI]
+      summary: Find books from a natural-language description
+      description: Calls the AI. Limited to 10 requests per minute.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmartSearchInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartSearchResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  # ------------------------------------------------------------- Subscriptions
+  /v1/subscriptions/payment-intent:
+    post:
+      tags: [Subscriptions]
+      summary: Create a Stripe PaymentIntent for the premium plan
+      description: No body needed, the member is taken from the token. Limited to 10 requests per minute.
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: PaymentIntent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: The member already has an active premium subscription
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: false }
+                  message: { type: string, example: Vous avez déjà un abonnement premium actif. }
+                  data:
+                    type: object
+                    properties:
+                      premium_until: { type: string, format: date-time }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          description: Stripe could not be reached or refused the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: false }
+                  message: { type: string, example: "Le paiement n'a pas pu être initialisé. Réessayez plus tard." }
+
+  /v1/subscriptions/status:
+    get:
+      tags: [Subscriptions]
+      summary: Subscription status and loan quota of the connected member
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ------------------------------------------------------------------ Webhooks
+  /v1/webhooks/stripe:
+    post:
+      tags: [Webhooks]
+      summary: Receive Stripe events (payment_intent.succeeded, payment_intent.payment_failed)
+      description: |
+        Called by Stripe only. No Bearer token: the request is authenticated
+        by the `Stripe-Signature` header, verified against the raw body.
+        Unhandled event types still return 200.
+      security: []
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Stripe event
+      responses:
+        '200':
+          description: Event received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received: { type: boolean, example: true }
+        '400':
+          description: Invalid or missing signature
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: false }
+                  message: { type: string, example: Signature invalide. }
+
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Sanctum token obtained via POST /login
+
   parameters:
     Id:
       name: id
@@ -446,6 +686,18 @@ components:
         default: 1
 
   responses:
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The member is not an admin
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: Resource not found
       content:
@@ -464,6 +716,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ValidationError'
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: The AI service is unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
   schemas:
     Error:
@@ -603,3 +867,60 @@ components:
           format: date
           description: Optional, must be after today (default is today + 14 days)
           example: '2026-12-01'
+
+    # ---- AI
+    SummaryResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data:
+          type: object
+          properties:
+            book_id: { type: integer, example: 1 }
+            summary: { type: string, example: "Un guide pratique pour apprendre Laravel..." }
+            generated_at: { type: string, format: date-time, nullable: true }
+
+    SmartSearchInput:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+          example: Un livre pour débutants sur les API REST
+
+    SmartSearchResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+
+    # ---- Subscriptions
+    PaymentIntentResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data:
+          type: object
+          properties:
+            payment_intent_id: { type: string, example: pi_3UfktBPXN898XWe33zfnzvb3 }
+            client_secret: { type: string, example: pi_3Ufkt_secret_xxx }
+            amount: { type: integer, description: Amount in cents, example: 500 }
+            currency: { type: string, example: eur }
+            status: { type: string, example: requires_payment_method }
+
+    SubscriptionStatusResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data:
+          type: object
+          properties:
+            subscription_status: { type: string, enum: [free, premium] }
+            is_premium: { type: boolean }
+            premium_until: { type: string, format: date-time, nullable: true }
+            active_loans: { type: integer, example: 2 }
+            loan_limit: { type: integer, nullable: true, description: null means unlimited }
+            remaining_loans: { type: integer, nullable: true }
